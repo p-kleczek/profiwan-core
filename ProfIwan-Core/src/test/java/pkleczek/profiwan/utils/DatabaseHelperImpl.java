@@ -9,20 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import javax.swing.JOptionPane;
-
 import org.joda.time.DateTime;
 import org.sqlite.SQLiteConfig;
 
-import pkleczek.profiwan.ProfIwan;
 import pkleczek.profiwan.model.PhraseEntry;
 import pkleczek.profiwan.model.RevisionEntry;
-
-//JOptionPane
-//.showMessageDialog(
-//		null,
-//		Messages.getString("dbError"), Messages.getString("error"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$ //$NON-NLS-2$
-
 
 public class DatabaseHelperImpl implements DatabaseHelper {
 
