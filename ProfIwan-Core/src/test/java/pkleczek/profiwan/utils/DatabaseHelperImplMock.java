@@ -15,7 +15,7 @@ import org.sqlite.SQLiteConfig;
 import pkleczek.profiwan.model.PhraseEntry;
 import pkleczek.profiwan.model.RevisionEntry;
 
-public class DatabaseHelperImpl implements DatabaseHelper {
+public class DatabaseHelperImplMock implements DatabaseHelper {
 
 	private static DatabaseHelper instance;
 
@@ -111,12 +111,12 @@ public class DatabaseHelperImpl implements DatabaseHelper {
 
 	public static DatabaseHelper getInstance() {
 		if (instance == null) {
-			instance = new DatabaseHelperImpl();
+			instance = new DatabaseHelperImplMock();
 		}
 		return instance;
 	}
 
-	private DatabaseHelperImpl() {
+	private DatabaseHelperImplMock() {
 	}
 
 	public static Connection getConnection() {

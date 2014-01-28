@@ -16,15 +16,15 @@ import org.junit.Test;
 
 import pkleczek.profiwan.utils.DBUtils;
 import pkleczek.profiwan.utils.DatabaseHelper;
-import pkleczek.profiwan.utils.DatabaseHelperImpl;
+import pkleczek.profiwan.utils.DatabaseHelperImplMock;
 
 public class PhraseEntryTest {
 
-	DatabaseHelper dbHelper = DatabaseHelperImpl.getInstance();
+	DatabaseHelper dbHelper = DatabaseHelperImplMock.getInstance();
 	
 	@Before
 	public void recreateDB() throws SQLException {
-		((DatabaseHelperImpl) dbHelper).recreateTables();
+		((DatabaseHelperImplMock) dbHelper).recreateTables();
 	}
 	
 	@Test

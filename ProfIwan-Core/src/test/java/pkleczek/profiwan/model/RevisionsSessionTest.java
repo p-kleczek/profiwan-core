@@ -14,15 +14,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 import pkleczek.profiwan.utils.DatabaseHelper;
-import pkleczek.profiwan.utils.DatabaseHelperImpl;
+import pkleczek.profiwan.utils.DatabaseHelperImplMock;
 
 public class RevisionsSessionTest {
 
-	DatabaseHelper dbHelper = DatabaseHelperImpl.getInstance();
+	DatabaseHelper dbHelper = DatabaseHelperImplMock.getInstance();
 
 	@Before
 	public void recreateDB() throws SQLException {
-		((DatabaseHelperImpl) dbHelper).recreateTables();
+		((DatabaseHelperImplMock) dbHelper).recreateTables();
 	}
 
 	private RevisionsSession rs = null;
