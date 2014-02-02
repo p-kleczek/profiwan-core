@@ -15,41 +15,12 @@ import org.joda.time.DateTime;
 public class PhraseEntry {
 
 	/**
-	 * Makes revision frequency vary +/- n% from its initial value to prevent
-	 * the stacking effect of revisions made on the same day.
+	 * Datetime when the phrase entry was created.
 	 */
-	public static double COUNTER_STACKING_FACTOR = 0.1;
-
-	/**
-	 * Change in revisions' frequency with each correct revision.
-	 */
-	public static int FREQUENCY_DECAY = 2;
-
-	/**
-	 * Maximum number of days between two consecutive revisions.
-	 */
-	public static int MAX_REVISION_INTERVAL = 30;
-
-	/**
-	 * Numbers of initial consecutive correct revisions before its frequency
-	 * starts to fall.
-	 */
-	public static int MIN_CORRECT_STREAK = 3;
-
-	/**
-	 * Minimum number of days between two consecutive revisions.
-	 */
-	public static int MIN_REVISION_INTERVAL = 1;
-
-	/**
-	 * blad => reset postepow we FREQ do podanego ulamka
-	 */
-	public static double MISTAKE_MULTIPLIER = 0.5;
-
 	private DateTime createdAt = null;
 
 	/**
-	 * ID as in database.
+	 * ID of the entry as in database.
 	 */
 	private long id;
 
@@ -58,19 +29,34 @@ public class PhraseEntry {
 	 */
 	private boolean inRevisions = false;
 
+	/**
+	 * A string used to group phrases by the user.
+	 */
 	private String label = ""; //$NON-NLS-1$
+
 	/**
 	 * ISO code of the first language.
 	 */
 	private String langA = "";
+
+	/**
+	 * Phrase in the first language.
+	 */
 	private String langAText = ""; //$NON-NLS-1$
+
 	/**
 	 * ISO code of the second language.
 	 */
 	private String langB = "";
 
+	/**
+	 * Phrase in the second language (its translation).
+	 */
 	private String langBText = ""; //$NON-NLS-1$
 
+	/**
+	 * List of all past revisions of this phrase.
+	 */
 	private List<RevisionEntry> revisions = new ArrayList<RevisionEntry>();
 
 	public DateTime getCreatedAt() {
@@ -101,77 +87,12 @@ public class PhraseEntry {
 		return langBText;
 	}
 
-	public int getRevisionFrequency() {
-		int freq = MIN_REVISION_INTERVAL;
-		int correctStreak = 0;
-		boolean isInitialStreak = false;
-
-		for (int i = 0; i < revisions.size(); i++) {
-			RevisionEntry e = revisions.get(i);
-
-			if (e.getMistakes() == 0) {
-				if (isInitialStreak) {
-					freq += FREQUENCY_DECAY;
-				}
-
-				correctStreak++;
-
-				if (!isInitialStreak && correctStreak == MIN_CORRECT_STREAK) {
-					isInitialStreak = true;
-//					correctStreak = 0; // FIXME: bez sensu tu zerowac, skoro potem mnozymy to i odejmujemy od freq!
-				}
-			} else {
-				if (isInitialStreak) {
-					freq -= correctStreak * FREQUENCY_DECAY
-							* MISTAKE_MULTIPLIER;
-
-					// clamp
-					freq = Math.min(freq, MAX_REVISION_INTERVAL);
-					freq = Math.max(freq, MIN_REVISION_INTERVAL);
-				}
-				correctStreak = 0;
-			}
-		}
-
-		return freq;
-	}
-
 	public List<RevisionEntry> getRevisions() {
 		return revisions;
 	}
 
 	public boolean isInRevisions() {
 		return inRevisions;
-	}
-
-	public boolean isReviseNow(DateTime dueDate) {
-
-		if (!isInRevisions()) {
-			return false;
-		}
-
-		if (revisions.isEmpty()) {
-			return true;
-		}
-
-		RevisionEntry lastRevision = revisions.get(revisions.size() - 1);
-		if (lastRevision.isToContinue()) {
-			return true;
-		}
-
-		int freq = getRevisionFrequency();
-
-		// Modify frequency to prevent stacking of revisions made on the same
-		// day.
-		freq *= (1.0 - COUNTER_STACKING_FACTOR) + Math.random()
-				* (COUNTER_STACKING_FACTOR / 2.0);
-		freq = Math.max(freq, MIN_REVISION_INTERVAL);
-		freq = Math.min(freq, MAX_REVISION_INTERVAL);
-
-		DateTime nextRevisionDate = lastRevision.getCreatedAt().plusDays(freq)
-				.withTimeAtStartOfDay();
-
-		return !nextRevisionDate.isAfter(dueDate);
 	}
 
 	public void setCreatedAt(DateTime createdAt) {

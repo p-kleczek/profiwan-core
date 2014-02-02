@@ -18,7 +18,7 @@ import com.google.common.collect.Iterators;
 public class RevisionsSession {
 
 	@SuppressWarnings("unused")
-	private static final String LOG_TAG = RevisionsSession.class.getName();
+	private static final String LOG_TAG =  RevisionsSession.class.getName();
 
 	/**
 	 * List of phrases pending for revision.
@@ -57,6 +57,38 @@ public class RevisionsSession {
 
 	private DatabaseHelper dbHelper;
 
+	/**
+	 * blad => reset postepow we FREQ do podanego ulamka
+	 */
+	public static double MISTAKE_MULTIPLIER = 0.5;
+
+	/**
+	 * Minimum number of days between two consecutive revisions.
+	 */
+	public static int MIN_REVISION_INTERVAL = 1;
+
+	/**
+	 * Numbers of initial consecutive correct revisions before its frequency
+	 * starts to fall.
+	 */
+	public static int MIN_CORRECT_STREAK = 3;
+
+	/**
+	 * Maximum number of days between two consecutive revisions.
+	 */
+	public static int MAX_REVISION_INTERVAL = 30;
+
+	/**
+	 * Change in revisions' frequency with each correct revision.
+	 */
+	public static int FREQUENCY_DECAY = 2;
+
+	/**
+	 * Makes revision frequency vary +/- n% from its initial value to prevent
+	 * the stacking effect of revisions made on the same day.
+	 */
+	public static double COUNTER_STACKING_FACTOR = 0.1;
+
 	public RevisionsSession(DatabaseHelper dbHelper) {
 		this.dbHelper = dbHelper;
 
@@ -79,7 +111,7 @@ public class RevisionsSession {
 		List<PhraseEntry> pending = new ArrayList<PhraseEntry>();
 
 		for (PhraseEntry pe : dictionary) {
-			if (pe.isReviseNow(dueDate)) {
+			if (isReviseNow(pe, dueDate)) {
 				pending.add(pe);
 			}
 		}
@@ -198,4 +230,73 @@ public class RevisionsSession {
 		revisionsNumber++;
 	}
 
+	private static int getRevisionFrequency(PhraseEntry pe) {
+		int freq =  MIN_REVISION_INTERVAL;
+		int correctStreak = 0;
+		boolean isInitialStreak = false;
+
+		for (int i = 0; i < pe.getRevisions().size(); i++) {
+			RevisionEntry e = pe.getRevisions().get(i);
+
+			if (e.getMistakes() == 0) {
+				if (isInitialStreak) {
+					freq +=  FREQUENCY_DECAY;
+				}
+
+				correctStreak++;
+
+				if (!isInitialStreak
+						&& correctStreak ==  MIN_CORRECT_STREAK) {
+					isInitialStreak = true;
+					// correctStreak = 0; // FIXME: bez sensu tu zerowac, skoro
+					// potem mnozymy to i odejmujemy od freq!
+				}
+			} else {
+				if (isInitialStreak) {
+					freq -= correctStreak *  FREQUENCY_DECAY
+							*  MISTAKE_MULTIPLIER;
+
+					// clamp
+					freq = Math.min(freq,
+							 MAX_REVISION_INTERVAL);
+					freq = Math.max(freq,
+							 MIN_REVISION_INTERVAL);
+				}
+				correctStreak = 0;
+			}
+		}
+
+		return freq;
+	}
+	
+	private static boolean isReviseNow(PhraseEntry pe, DateTime dueDate) {
+
+		if (!pe.isInRevisions()) {
+			return false;
+		}
+
+		if (pe.getRevisions().isEmpty()) {
+			return true;
+		}
+
+		RevisionEntry lastRevision = pe.getRevisions().get(pe.getRevisions().size() - 1);
+		if (lastRevision.isToContinue()) {
+			return true;
+		}
+
+		int freq = getRevisionFrequency(pe);
+
+		// Modify frequency to prevent stacking of revisions made on the same
+		// day.
+		freq *= (1.0 - RevisionsSession.COUNTER_STACKING_FACTOR)
+				+ Math.random()
+				* (RevisionsSession.COUNTER_STACKING_FACTOR / 2.0);
+		freq = Math.max(freq, RevisionsSession.MIN_REVISION_INTERVAL);
+		freq = Math.min(freq, RevisionsSession.MAX_REVISION_INTERVAL);
+
+		DateTime nextRevisionDate = lastRevision.getCreatedAt().plusDays(freq)
+				.withTimeAtStartOfDay();
+
+		return !nextRevisionDate.isAfter(dueDate);
+	}	
 }

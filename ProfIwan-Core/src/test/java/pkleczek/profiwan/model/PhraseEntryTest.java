@@ -3,7 +3,6 @@ package pkleczek.profiwan.model;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -30,114 +29,7 @@ public class PhraseEntryTest {
 
 	}
 	
-	@Test
-	public void testIsReviseNowNotInRevision() {
-		PhraseEntry pe = new PhraseEntry();
-		pe.setInRevisions(false);
-		
-		assertFalse(pe.isReviseNow(todayMidnight));
-	}	
-	
-	@Test
-	public void testIsReviseNowAfterNextInterval() {
-		PhraseEntry pe = new PhraseEntry();
-		pe.setInRevisions(true);
-		RevisionEntry re = null;
 
-		re = new RevisionEntry();
-		re.setCreatedAt(DateTime.now().minusDays(PhraseEntry.MIN_REVISION_INTERVAL + 1));
-		re.setMistakes(1);
-		pe.getRevisions().add(re);
-
-		assertTrue(pe.isReviseNow(todayMidnight));
-	}
-
-	@Test
-	public void testIsReviseNowBeforeNextInterval() {
-		PhraseEntry pe = new PhraseEntry();
-		RevisionEntry re = null;
-
-		re = new RevisionEntry();
-		re.setCreatedAt(DateTime.now());
-		re.setMistakes(1);
-		pe.getRevisions().add(re);
-
-		assertFalse(pe.isReviseNow(todayMidnight));
-	}
-
-	@Test
-	public void testGetRevisionsFrequencyNoStreak() {
-		PhraseEntry pe = new PhraseEntry();
-		RevisionEntry re = null;
-
-		for (int i = 0; i < PhraseEntry.MIN_CORRECT_STREAK; i++) {
-			re = new RevisionEntry();
-			re.setCreatedAt(DateTime.now().minusDays(PhraseEntry.MIN_CORRECT_STREAK));
-			re.setMistakes(0);
-			pe.getRevisions().add(re);
-		}
-
-		assertEquals(pe.getRevisionFrequency(),
-				PhraseEntry.MIN_REVISION_INTERVAL);
-	}
-
-	@Test
-	public void testGetRevisionsFrequencyStreak() {
-		PhraseEntry pe = new PhraseEntry();
-		RevisionEntry re = null;
-
-		for (int i = 0; i < PhraseEntry.MIN_CORRECT_STREAK + 1; i++) {
-			re = new RevisionEntry();
-			re.setCreatedAt(DateTime.now().minusDays(PhraseEntry.MIN_CORRECT_STREAK));
-			re.setMistakes(0);
-			pe.getRevisions().add(re);
-		}
-
-		assertEquals(PhraseEntry.MIN_REVISION_INTERVAL
-				+ PhraseEntry.FREQUENCY_DECAY, pe.getRevisionFrequency());
-	}
-
-	@Test
-	public void testGetRevisionsFrequencyNoStreakError() {
-		PhraseEntry pe = new PhraseEntry();
-		RevisionEntry re = null;
-
-		for (int i = 0; i < PhraseEntry.MIN_CORRECT_STREAK - 2; i++) {
-			re = new RevisionEntry();
-			re.setCreatedAt(DateTime.now().minusDays(PhraseEntry.MIN_CORRECT_STREAK));
-			re.setMistakes(0);
-			pe.getRevisions().add(re);
-		}
-
-		re = new RevisionEntry();
-		re.setCreatedAt(DateTime.now().minusDays(PhraseEntry.MIN_CORRECT_STREAK));
-		re.setMistakes(1);
-		pe.getRevisions().add(re);
-
-		assertEquals(PhraseEntry.MIN_REVISION_INTERVAL,
-				pe.getRevisionFrequency());
-	}
-
-	@Test
-	public void testGetRevisionsFrequencyStreakError() {
-		PhraseEntry pe = new PhraseEntry();
-		RevisionEntry re = null;
-
-		for (int i = 0; i < PhraseEntry.MIN_CORRECT_STREAK + 2; i++) {
-			re = new RevisionEntry();
-			re.setCreatedAt(DateTime.now().minusDays(PhraseEntry.MIN_CORRECT_STREAK));
-			re.setMistakes(0);
-			pe.getRevisions().add(re);
-		}
-
-		re = new RevisionEntry();
-		re.setCreatedAt(DateTime.now().minusDays(PhraseEntry.MIN_CORRECT_STREAK));
-		re.setMistakes(1);
-		pe.getRevisions().add(re);
-
-		assertEquals(PhraseEntry.MIN_REVISION_INTERVAL
-				+ PhraseEntry.FREQUENCY_DECAY, pe.getRevisionFrequency());
-	}
 	
 	@Test
 	public void testInsertIntoDB() throws SQLException {

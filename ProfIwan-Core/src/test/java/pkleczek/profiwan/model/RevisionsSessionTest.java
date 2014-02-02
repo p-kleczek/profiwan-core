@@ -1,6 +1,7 @@
 package pkleczek.profiwan.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -19,14 +20,17 @@ import pkleczek.profiwan.utils.DatabaseHelperImplMock;
 public class RevisionsSessionTest {
 
 	DatabaseHelper dbHelper = DatabaseHelperImplMock.getInstance();
+	DateTime todayMidnight;
 
 	@Before
 	public void recreateDB() throws SQLException {
 		((DatabaseHelperImplMock) dbHelper).recreateTables();
+		todayMidnight = DateTime.now().withTimeAtStartOfDay();
 	}
 
 	private RevisionsSession rs = null;
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testPrepareRevisions() throws Exception {
 
@@ -119,5 +123,165 @@ public class RevisionsSessionTest {
 
 		RevisionEntry ret = (RevisionEntry) method.invoke(rs, pe);
 		assertSame(ret, re);
+	}
+
+	@Test
+	public void testIsReviseNowNotInRevision() throws Exception {
+		PhraseEntry pe = new PhraseEntry();
+		pe.setInRevisions(false);
+
+		Method method = RevisionsSession.class.getDeclaredMethod("isReviseNow",
+				PhraseEntry.class, DateTime.class);
+		method.setAccessible(true);
+
+		boolean isReviseNowResult = (Boolean) method.invoke(rs, pe,
+				todayMidnight);
+
+		assertFalse(isReviseNowResult);
+	}
+
+	@Test
+	public void testIsReviseNowAfterNextInterval() throws Exception {
+		PhraseEntry pe = new PhraseEntry();
+		pe.setInRevisions(true);
+		RevisionEntry re = null;
+
+		re = new RevisionEntry();
+		re.setCreatedAt(DateTime.now().minusDays(
+				RevisionsSession.MIN_REVISION_INTERVAL + 1));
+		re.setMistakes(1);
+		pe.getRevisions().add(re);
+
+		Method method = RevisionsSession.class.getDeclaredMethod("isReviseNow",
+				PhraseEntry.class, DateTime.class);
+		method.setAccessible(true);
+
+		boolean isReviseNowResult = (Boolean) method.invoke(rs, pe,
+				todayMidnight);
+
+		assertTrue(isReviseNowResult);
+	}
+
+	@Test
+	public void testIsReviseNowBeforeNextInterval() throws Exception {
+		PhraseEntry pe = new PhraseEntry();
+		RevisionEntry re = null;
+
+		re = new RevisionEntry();
+		re.setCreatedAt(DateTime.now());
+		re.setMistakes(1);
+		pe.getRevisions().add(re);
+
+		Method method = RevisionsSession.class.getDeclaredMethod("isReviseNow",
+				PhraseEntry.class, DateTime.class);
+		method.setAccessible(true);
+
+		boolean isReviseNowResult = (Boolean) method.invoke(rs, pe,
+				todayMidnight);
+
+		assertFalse(isReviseNowResult);
+	}
+
+	@Test
+	public void testGetRevisionsFrequencyNoStreak() throws Exception {
+		PhraseEntry pe = new PhraseEntry();
+		RevisionEntry re = null;
+
+		for (int i = 0; i < RevisionsSession.MIN_CORRECT_STREAK; i++) {
+			re = new RevisionEntry();
+			re.setCreatedAt(DateTime.now().minusDays(
+					RevisionsSession.MIN_CORRECT_STREAK));
+			re.setMistakes(0);
+			pe.getRevisions().add(re);
+		}
+
+		Method method = RevisionsSession.class.getDeclaredMethod(
+				"getRevisionFrequency", PhraseEntry.class);
+		method.setAccessible(true);
+
+		int getRevisionFrequencyResult = (Integer) method.invoke(rs, pe);
+
+		assertEquals(RevisionsSession.MIN_REVISION_INTERVAL,
+				getRevisionFrequencyResult);
+	}
+
+	@Test
+	public void testGetRevisionsFrequencyStreak() throws Exception {
+		PhraseEntry pe = new PhraseEntry();
+		RevisionEntry re = null;
+
+		for (int i = 0; i < RevisionsSession.MIN_CORRECT_STREAK + 1; i++) {
+			re = new RevisionEntry();
+			re.setCreatedAt(DateTime.now().minusDays(
+					RevisionsSession.MIN_CORRECT_STREAK));
+			re.setMistakes(0);
+			pe.getRevisions().add(re);
+		}
+
+		Method method = RevisionsSession.class.getDeclaredMethod(
+				"getRevisionFrequency", PhraseEntry.class);
+		method.setAccessible(true);
+
+		int getRevisionFrequencyResult = (Integer) method.invoke(rs, pe);
+
+		assertEquals(RevisionsSession.MIN_REVISION_INTERVAL
+				+ RevisionsSession.FREQUENCY_DECAY, getRevisionFrequencyResult);
+	}
+
+	@Test
+	public void testGetRevisionsFrequencyNoStreakError() throws Exception {
+		PhraseEntry pe = new PhraseEntry();
+		RevisionEntry re = null;
+
+		for (int i = 0; i < RevisionsSession.MIN_CORRECT_STREAK - 2; i++) {
+			re = new RevisionEntry();
+			re.setCreatedAt(DateTime.now().minusDays(
+					RevisionsSession.MIN_CORRECT_STREAK));
+			re.setMistakes(0);
+			pe.getRevisions().add(re);
+		}
+
+		re = new RevisionEntry();
+		re.setCreatedAt(DateTime.now().minusDays(
+				RevisionsSession.MIN_CORRECT_STREAK));
+		re.setMistakes(1);
+		pe.getRevisions().add(re);
+
+		Method method = RevisionsSession.class.getDeclaredMethod(
+				"getRevisionFrequency", PhraseEntry.class);
+		method.setAccessible(true);
+
+		int getRevisionFrequencyResult = (Integer) method.invoke(rs, pe);
+
+		assertEquals(RevisionsSession.MIN_REVISION_INTERVAL,
+				getRevisionFrequencyResult);
+	}
+
+	@Test
+	public void testGetRevisionsFrequencyStreakError() throws Exception {
+		PhraseEntry pe = new PhraseEntry();
+		RevisionEntry re = null;
+
+		for (int i = 0; i < RevisionsSession.MIN_CORRECT_STREAK + 2; i++) {
+			re = new RevisionEntry();
+			re.setCreatedAt(DateTime.now().minusDays(
+					RevisionsSession.MIN_CORRECT_STREAK));
+			re.setMistakes(0);
+			pe.getRevisions().add(re);
+		}
+
+		re = new RevisionEntry();
+		re.setCreatedAt(DateTime.now().minusDays(
+				RevisionsSession.MIN_CORRECT_STREAK));
+		re.setMistakes(1);
+		pe.getRevisions().add(re);
+
+		Method method = RevisionsSession.class.getDeclaredMethod(
+				"getRevisionFrequency", PhraseEntry.class);
+		method.setAccessible(true);
+
+		int getRevisionFrequencyResult = (Integer) method.invoke(rs, pe);
+
+		assertEquals(RevisionsSession.MIN_REVISION_INTERVAL, getRevisionFrequencyResult);
 	}
 }
