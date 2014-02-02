@@ -118,7 +118,7 @@ public class PhraseEntry {
 
 				if (!isInitialStreak && correctStreak == MIN_CORRECT_STREAK) {
 					isInitialStreak = true;
-					correctStreak = 0;
+//					correctStreak = 0; // FIXME: bez sensu tu zerowac, skoro potem mnozymy to i odejmujemy od freq!
 				}
 			} else {
 				if (isInitialStreak) {
@@ -144,7 +144,7 @@ public class PhraseEntry {
 		return inRevisions;
 	}
 
-	public boolean isReviseNow() {
+	public boolean isReviseNow(DateTime dueDate) {
 
 		if (!isInRevisions()) {
 			return false;
@@ -170,9 +170,8 @@ public class PhraseEntry {
 
 		DateTime nextRevisionDate = lastRevision.getCreatedAt().plusDays(freq)
 				.withTimeAtStartOfDay();
-		DateTime todayMidnight = DateTime.now().withTimeAtStartOfDay();
 
-		return !nextRevisionDate.isAfter(todayMidnight);
+		return !nextRevisionDate.isAfter(dueDate);
 	}
 
 	public void setCreatedAt(DateTime createdAt) {

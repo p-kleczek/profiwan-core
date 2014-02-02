@@ -1,5 +1,6 @@
 package pkleczek.profiwan.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -63,21 +64,33 @@ public class RevisionsSession {
 	}
 
 	private void initialize() {
-		buildUpListOfPendingPhrases();
+		DateTime todayMidnight = DateTime.now().withTimeAtStartOfDay();
+		pendingPhrases.addAll(getListOfPendingPhrases(dbHelper, todayMidnight));
+		
+		setupEnvironmentVariables();
 
 		if (hasRevisions()) {
 			nextRevision();
 		}
 	}
 
-	private void buildUpListOfPendingPhrases() {
+	public static List<PhraseEntry> getListOfPendingPhrases(DatabaseHelper dbHelper, DateTime dueDate) {
 		List<PhraseEntry> dictionary = dbHelper.getDictionary();
+		List<PhraseEntry> pending = new ArrayList<PhraseEntry>();
 
 		for (PhraseEntry pe : dictionary) {
-			if (pe.isReviseNow()) {
-				pendingPhrases.add(pe);
-				revisionEntries.put(pe.getId(), prepareRevisionEntry(pe));
+			if (pe.isReviseNow(dueDate)) {
+				pending.add(pe);
 			}
+		}
+
+		return pending;
+	}	
+	
+	private void setupEnvironmentVariables() {
+		
+		for (PhraseEntry pe : pendingPhrases) {
+			revisionEntries.put(pe.getId(), prepareRevisionEntry(pe));
 		}
 
 		Collections.shuffle(pendingPhrases);

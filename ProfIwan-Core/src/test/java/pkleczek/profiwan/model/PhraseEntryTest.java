@@ -21,17 +21,21 @@ import pkleczek.profiwan.utils.DatabaseHelperImplMock;
 public class PhraseEntryTest {
 
 	DatabaseHelper dbHelper = DatabaseHelperImplMock.getInstance();
+	DateTime todayMidnight;
 	
 	@Before
 	public void recreateDB() throws SQLException {
 		((DatabaseHelperImplMock) dbHelper).recreateTables();
+		todayMidnight = DateTime.now().withTimeAtStartOfDay();
+
 	}
 	
 	@Test
 	public void testIsReviseNowNotInRevision() {
 		PhraseEntry pe = new PhraseEntry();
 		pe.setInRevisions(false);
-		assertFalse(pe.isReviseNow());
+		
+		assertFalse(pe.isReviseNow(todayMidnight));
 	}	
 	
 	@Test
@@ -45,7 +49,7 @@ public class PhraseEntryTest {
 		re.setMistakes(1);
 		pe.getRevisions().add(re);
 
-		assertTrue(pe.isReviseNow());
+		assertTrue(pe.isReviseNow(todayMidnight));
 	}
 
 	@Test
@@ -58,7 +62,7 @@ public class PhraseEntryTest {
 		re.setMistakes(1);
 		pe.getRevisions().add(re);
 
-		assertFalse(pe.isReviseNow());
+		assertFalse(pe.isReviseNow(todayMidnight));
 	}
 
 	@Test
