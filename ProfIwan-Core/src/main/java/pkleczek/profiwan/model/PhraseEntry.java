@@ -12,7 +12,7 @@ import org.joda.time.DateTime;
  * @author Pawel
  * 
  */
-public class PhraseEntry {
+public class PhraseEntry implements Comparable<PhraseEntry>{
 
 	/**
 	 * Datetime when the phrase entry was created.
@@ -143,6 +143,11 @@ public class PhraseEntry {
 		}
 
 		return sb.toString();
+	}
+
+	@Override
+	public int compareTo(PhraseEntry o) {
+		return langBText.compareTo(o.langBText);
 	}
 
 }
