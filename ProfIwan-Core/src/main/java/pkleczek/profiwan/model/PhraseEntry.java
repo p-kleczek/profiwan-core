@@ -2,8 +2,13 @@ package pkleczek.profiwan.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.joda.time.DateTime;
+
+import pkleczek.profiwan.utils.DBUtils;
+import pkleczek.profiwan.utils.DatabaseHelper;
 
 /**
  * The <code>PhraseEntry</code> class stores all the information about a phrase
@@ -12,7 +17,7 @@ import org.joda.time.DateTime;
  * @author Pawel
  * 
  */
-public class PhraseEntry implements Comparable<PhraseEntry>{
+public class PhraseEntry implements Comparable<PhraseEntry> {
 
 	/**
 	 * Datetime when the phrase entry was created.
@@ -129,6 +134,80 @@ public class PhraseEntry implements Comparable<PhraseEntry>{
 
 	public void setRevisions(List<RevisionEntry> revisions) {
 		this.revisions = revisions;
+	}
+
+	public String[] toCSVTokens(String[] attributes) {
+		List<String> tokens = new ArrayList<String>();
+
+		for (String attr : attributes) {
+			if (attr.equals(DatabaseHelper.KEY_ID)) {
+				tokens.add(String.valueOf(getId()));
+			}
+			if (attr.equals(DatabaseHelper.KEY_CREATED_AT)) {
+				Integer time = DBUtils.getIntFromDateTime(getCreatedAt());
+				tokens.add(time.toString());
+			}
+			if (attr.equals(DatabaseHelper.KEY_PHRASE_LANG1)) {
+				tokens.add(getLangA());
+			}
+			if (attr.equals(DatabaseHelper.KEY_PHRASE_LANG2)) {
+				tokens.add(getLangB());
+			}
+			if (attr.equals(DatabaseHelper.KEY_PHRASE_LANG1_TEXT)) {
+				tokens.add(getLangAText());
+			}
+			if (attr.equals(DatabaseHelper.KEY_PHRASE_LANG2_TEXT)) {
+				tokens.add(getLangBText());
+			}
+			if (attr.equals(DatabaseHelper.KEY_PHRASE_LABEL)) {
+				tokens.add(getLabel());
+			}
+			if (attr.equals(DatabaseHelper.KEY_PHRASE_IN_REVISION)) {
+				tokens.add(String.valueOf(isInRevisions()));
+			}
+		}
+
+		return tokens.toArray(new String[0]);
+	}
+
+	/**
+	 * 
+	 * @param tokens
+	 *            maps attribute to its token data
+	 */
+	public void fromCSVTokens(Map<String, String> data) {
+
+		if (data.containsKey(DatabaseHelper.KEY_ID)) {
+			setId(Long.valueOf(data.get(DatabaseHelper.KEY_ID)));
+		}
+
+		if (data.containsKey(DatabaseHelper.KEY_CREATED_AT)) {
+			Integer intTime = Integer.valueOf(data
+					.get(DatabaseHelper.KEY_CREATED_AT));
+			setCreatedAt(DBUtils.getDateTimeFromInt(intTime));
+		}
+
+		if (data.containsKey(DatabaseHelper.KEY_PHRASE_LANG1)) {
+			setLangA(data.get(DatabaseHelper.KEY_PHRASE_LANG1));
+		}
+		if (data.containsKey(DatabaseHelper.KEY_PHRASE_LANG2)) {
+			setLangB(data.get(DatabaseHelper.KEY_PHRASE_LANG2));
+		}
+		if (data.containsKey(DatabaseHelper.KEY_PHRASE_LANG1_TEXT)) {
+			setLangAText(data.get(DatabaseHelper.KEY_PHRASE_LANG1_TEXT));
+		}
+		if (data.containsKey(DatabaseHelper.KEY_PHRASE_LANG2_TEXT)) {
+			setLangBText(data.get(DatabaseHelper.KEY_PHRASE_LANG2_TEXT));
+		}
+		if (data.containsKey(DatabaseHelper.KEY_PHRASE_LABEL)) {
+			setLabel(data.get(DatabaseHelper.KEY_PHRASE_LABEL));
+		}
+
+		if (data.containsKey(DatabaseHelper.KEY_PHRASE_IN_REVISION)) {
+			Boolean inRevisions = Boolean.valueOf(data
+					.get(DatabaseHelper.KEY_PHRASE_IN_REVISION));
+			setInRevisions(inRevisions);
+		}
 	}
 
 	@Override

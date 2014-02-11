@@ -182,7 +182,6 @@ public class DatabaseHelperImplMock implements DatabaseHelper {
 					}
 			}
 		} catch (SQLException e) {
-			// TODO: debug
 			e.printStackTrace();
 		}
 
@@ -207,7 +206,6 @@ public class DatabaseHelperImplMock implements DatabaseHelper {
 
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			// TODO: debug
 			e.printStackTrace();
 		}
 
@@ -221,7 +219,6 @@ public class DatabaseHelperImplMock implements DatabaseHelper {
 			stmt.setInt(KEY_ID, (int) phrase_id);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			// TODO: debug
 			e.printStackTrace();
 		}
 	}
@@ -253,7 +250,6 @@ public class DatabaseHelperImplMock implements DatabaseHelper {
 					}
 			}
 		} catch (SQLException e) {
-			// TODO: debug
 			e.printStackTrace();
 		}
 
@@ -270,7 +266,6 @@ public class DatabaseHelperImplMock implements DatabaseHelper {
 			stmt.setInt(KEY_ID, (int) revision.getId());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			// TODO: debug
 			e.printStackTrace();
 		}
 
@@ -330,7 +325,6 @@ public class DatabaseHelperImplMock implements DatabaseHelper {
 			}
 
 		} catch (SQLException e) {
-			// TODO: debug
 			e.printStackTrace();
 		} finally {
 			try {
