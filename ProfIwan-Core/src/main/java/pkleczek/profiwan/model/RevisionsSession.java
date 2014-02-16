@@ -11,6 +11,7 @@ import java.util.Map;
 import org.joda.time.DateTime;
 
 import pkleczek.profiwan.utils.DatabaseHelper;
+import pkleczek.profiwan.utils.TextUtils;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -18,7 +19,7 @@ import com.google.common.collect.Iterators;
 public class RevisionsSession {
 
 	@SuppressWarnings("unused")
-	private static final String LOG_TAG =  RevisionsSession.class.getName();
+	private static final String LOG_TAG = RevisionsSession.class.getName();
 
 	/**
 	 * List of phrases pending for revision.
@@ -65,7 +66,7 @@ public class RevisionsSession {
 	/**
 	 * Minimum number of days between two consecutive revisions.
 	 */
-	public static int MIN_REVISION_INTERVAL = 1;
+	public static int MIN_REVISION_INTERVAL = 2;
 
 	/**
 	 * Numbers of initial consecutive correct revisions before its frequency
@@ -98,7 +99,7 @@ public class RevisionsSession {
 	private void initialize() {
 		DateTime todayMidnight = DateTime.now().withTimeAtStartOfDay();
 		pendingPhrases.addAll(getListOfPendingPhrases(dbHelper, todayMidnight));
-		
+
 		setupEnvironmentVariables();
 
 		if (hasRevisions()) {
@@ -106,7 +107,8 @@ public class RevisionsSession {
 		}
 	}
 
-	public static List<PhraseEntry> getListOfPendingPhrases(DatabaseHelper dbHelper, DateTime dueDate) {
+	public static List<PhraseEntry> getListOfPendingPhrases(
+			DatabaseHelper dbHelper, DateTime dueDate) {
 		List<PhraseEntry> dictionary = dbHelper.getDictionary();
 		List<PhraseEntry> pending = new ArrayList<PhraseEntry>();
 
@@ -117,10 +119,10 @@ public class RevisionsSession {
 		}
 
 		return pending;
-	}	
-	
+	}
+
 	private void setupEnvironmentVariables() {
-		
+
 		for (PhraseEntry pe : pendingPhrases) {
 			revisionEntries.put(pe.getId(), prepareRevisionEntry(pe));
 		}
@@ -149,7 +151,9 @@ public class RevisionsSession {
 	}
 
 	public boolean isEnteredCorrectly(CharSequence input) {
-		return currentPhrase.getLangBText().equals(input);
+		String model = TextUtils.getUnaccentedString(currentPhrase
+				.getLangBText());
+		return model.equals(input);
 	}
 
 	public boolean processTypedWord(String input) {
@@ -166,9 +170,8 @@ public class RevisionsSession {
 			acceptRevision();
 		} else {
 			re.nextMistake();
+			dbHelper.updateRevision(re);
 		}
-
-		dbHelper.updateRevision(re);
 
 		return enteredCorrectly;
 	}
@@ -184,6 +187,7 @@ public class RevisionsSession {
 	public void acceptRevision() {
 		RevisionEntry re = revisionEntries.get(currentPhrase.getId());
 		re.enteredCorrectly();
+		dbHelper.updateRevision(re);
 
 		revisionEntries.remove(currentPhrase.getId());
 		pendingRevisionsIterator.remove();
@@ -231,7 +235,7 @@ public class RevisionsSession {
 	}
 
 	private static int getRevisionFrequency(PhraseEntry pe) {
-		int freq =  MIN_REVISION_INTERVAL;
+		int freq = MIN_REVISION_INTERVAL;
 		int correctStreak = 0;
 		boolean isInitialStreak = false;
 
@@ -240,27 +244,24 @@ public class RevisionsSession {
 
 			if (e.getMistakes() == 0) {
 				if (isInitialStreak) {
-					freq +=  FREQUENCY_DECAY;
+					freq += FREQUENCY_DECAY;
 				}
 
 				correctStreak++;
 
-				if (!isInitialStreak
-						&& correctStreak ==  MIN_CORRECT_STREAK) {
+				if (!isInitialStreak && correctStreak == MIN_CORRECT_STREAK) {
 					isInitialStreak = true;
 					// correctStreak = 0; // FIXME: bez sensu tu zerowac, skoro
 					// potem mnozymy to i odejmujemy od freq!
 				}
 			} else {
 				if (isInitialStreak) {
-					freq -= correctStreak *  FREQUENCY_DECAY
-							*  MISTAKE_MULTIPLIER;
+					freq -= correctStreak * FREQUENCY_DECAY
+							* MISTAKE_MULTIPLIER;
 
 					// clamp
-					freq = Math.min(freq,
-							 MAX_REVISION_INTERVAL);
-					freq = Math.max(freq,
-							 MIN_REVISION_INTERVAL);
+					freq = Math.min(freq, MAX_REVISION_INTERVAL);
+					freq = Math.max(freq, MIN_REVISION_INTERVAL);
 				}
 				correctStreak = 0;
 			}
@@ -268,7 +269,7 @@ public class RevisionsSession {
 
 		return freq;
 	}
-	
+
 	private static boolean isReviseNow(PhraseEntry pe, DateTime dueDate) {
 
 		if (!pe.isInRevisions()) {
@@ -279,7 +280,8 @@ public class RevisionsSession {
 			return true;
 		}
 
-		RevisionEntry lastRevision = pe.getRevisions().get(pe.getRevisions().size() - 1);
+		RevisionEntry lastRevision = pe.getRevisions().get(
+				pe.getRevisions().size() - 1);
 		if (lastRevision.isToContinue()) {
 			return true;
 		}
@@ -298,5 +300,5 @@ public class RevisionsSession {
 				.withTimeAtStartOfDay();
 
 		return !nextRevisionDate.isAfter(dueDate);
-	}	
+	}
 }

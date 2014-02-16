@@ -3,7 +3,6 @@ package pkleczek.profiwan.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.joda.time.DateTime;
 
@@ -229,4 +228,38 @@ public class PhraseEntry implements Comparable<PhraseEntry> {
 		return langBText.compareTo(o.langBText);
 	}
 
+	/**
+	 * A collision exists if two phrases have same languages and at least one
+	 * text is same for both phrases.
+	 * 
+	 * @param p1
+	 * @param p2
+	 * @return
+	 */
+	public static boolean isCollision(PhraseEntry p1, PhraseEntry p2) {
+		if (!p1.getLangA().equals(p2.getLangA())
+				|| !p1.getLangB().equals(p2.getLangB())) {
+			return false;
+		}
+
+		if (p1.getLangAText().equals(p2.getLangAText())
+				|| p1.getLangBText().equals(p2.getLangBText())) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Copies all data that may vary (used to update an entry).
+	 * 
+	 * @param pe
+	 */
+	public void copyData(PhraseEntry pe) {
+		setLangA(pe.getLangA());
+		setLangB(pe.getLangB());
+		setLangAText(pe.getLangAText());
+		setLangBText(pe.getLangBText());
+		setLabel(pe.getLabel());
+	}
 }
