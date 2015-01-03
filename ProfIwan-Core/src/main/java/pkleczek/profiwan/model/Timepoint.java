@@ -8,7 +8,8 @@ public class Timepoint  implements Comparable<Timepoint> {
 		SESSION_STARTED,
 		SESSION_FINISHED,
 		REVISION_STARTED,
-		REVISION_FINISHED
+		REVISION_FINISHED,
+		REVISION_INTERRUPTED
 	}
 	
 	private long id;
@@ -42,5 +43,10 @@ public class Timepoint  implements Comparable<Timepoint> {
 		return createdAt.compareTo(o.createdAt);
 	}
 	
-	
+	public static Timepoint create(TimepointType type) {
+		Timepoint t = new Timepoint();
+		t.setCreatedAt(DateTime.now());
+		t.setType(type);
+		return t;
+	}
 }
