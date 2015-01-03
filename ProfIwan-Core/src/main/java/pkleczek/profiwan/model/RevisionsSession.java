@@ -239,12 +239,19 @@ public class RevisionsSession {
 		int correctStreak = 0;
 		boolean isInitialStreak = false;
 
+		// Frequency when the streak began.
+		int freqStreakBegin = -1;
+
 		for (int i = 0; i < pe.getRevisions().size(); i++) {
 			RevisionEntry e = pe.getRevisions().get(i);
 
 			if (e.getMistakes() == 0) {
+				if (correctStreak == 0) {
+					freqStreakBegin = freq;
+				}
+
 				if (isInitialStreak) {
-					freq += FREQUENCY_DECAY;
+					freq += FREQUENCY_DECAY + correctStreak;
 				}
 
 				correctStreak++;
@@ -256,8 +263,7 @@ public class RevisionsSession {
 				}
 			} else {
 				if (isInitialStreak) {
-					freq -= correctStreak * FREQUENCY_DECAY
-							* MISTAKE_MULTIPLIER;
+					freq -= (freq - freqStreakBegin) * MISTAKE_MULTIPLIER;
 
 					// clamp
 					freq = Math.min(freq, MAX_REVISION_INTERVAL);
