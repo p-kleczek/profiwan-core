@@ -5,6 +5,7 @@ import java.util.List;
 import pkleczek.profiwan.model.PhraseEntry;
 import pkleczek.profiwan.model.RevisionEntry;
 import pkleczek.profiwan.model.RevisionsSession;
+import pkleczek.profiwan.model.Timepoint;
 
 public interface DatabaseHelper {
 
@@ -19,6 +20,7 @@ public interface DatabaseHelper {
 	// Table Names
 	String TABLE_PHRASE = "Phrase";
 	String TABLE_REVISION = "Revision";
+	String TABLE_TIMEPOINT = "Timepoint";
 
 	// Common column names
 	String KEY_ID = "_id";
@@ -35,6 +37,9 @@ public interface DatabaseHelper {
 	// REVISION Table - column names
 	String KEY_REVISION_MISTAKES = "mistakes";
 	String KEY_REVISION_PHRASE_ID = "Phrase_idPhrase";
+
+	// TIMEPOINT Table - column names
+	String KEY_TIMEPOINT_TYPE = "type";
 
 	// Table Create Statements
 	// PHRASE Table - create statement
@@ -54,6 +59,11 @@ public interface DatabaseHelper {
 			+ ") REFERENCES " + TABLE_PHRASE + "(" + KEY_ID
 			+ ") ON DELETE CASCADE ON UPDATE CASCADE" + ");";
 
+	String CREATE_TABLE_TIMEPOINT = "CREATE TABLE " + TABLE_TIMEPOINT + "("
+			+ KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + KEY_CREATED_AT
+			+ " INTEGER NOT NULL," + KEY_TIMEPOINT_TYPE
+			+ " TEXT NOT NULL" + ");";
+
 	long createPhrase(PhraseEntry phrase);
 
 	int updatePhrase(PhraseEntry phrase);
@@ -65,4 +75,7 @@ public interface DatabaseHelper {
 	int updateRevision(RevisionEntry revision);
 
 	List<PhraseEntry> getDictionary();
+	
+	long createTimepoint(Timepoint timepoint);
+	List<Timepoint> getAllTimepoints();
 }

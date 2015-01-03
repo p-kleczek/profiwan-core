@@ -14,6 +14,7 @@ import org.sqlite.SQLiteConfig;
 
 import pkleczek.profiwan.model.PhraseEntry;
 import pkleczek.profiwan.model.RevisionEntry;
+import pkleczek.profiwan.model.Timepoint;
 
 public class DatabaseHelperImplMock implements DatabaseHelper {
 
@@ -341,6 +342,16 @@ public class DatabaseHelperImplMock implements DatabaseHelper {
 		}
 
 		return dict;
+	}
+
+	@Override
+	public long createTimepoint(Timepoint timepoint) {
+		throw new UnsupportedOperationException("Not yet implemented.");
+	}
+
+	@Override
+	public List<Timepoint> getAllTimepoints() {
+		throw new UnsupportedOperationException("Not yet implemented.");
 	}
 
 }
